@@ -1,4 +1,6 @@
+import os
 import socket
+from Utils.ShaTool import calculate_file_signature
 
 # 服务器的主机和端口
 host = '127.0.0.1'
@@ -14,15 +16,20 @@ client_socket.connect((host, port))
 # message = "Hello, Server!"
 # client_socket.sendall(message.encode())
 
-# 接收文件内容
-file_data = client_socket.recv(1024)
-
 # 文件保存路径
-file_path = 'fileReceived.txt'
-
-# 将接收到的文件内容写入本地文件
-with open(file_path, 'wb') as file:
-    file.write(file_data)
+file_path = 'output/model_ds_30.pth'
+if os.path.exists(file_path):
+    os.remove(file_path)
+# 接收文件内容
+while True:
+    file_data = client_socket.recv(1024)
+    if not file_data:
+        break
+    with open(file_path, 'ab') as file:
+        file.write(file_data)
+# 计算文件的哈希值
+print(calculate_file_signature(file_path))
+print(calculate_file_signature(file_path))
 
 print(f"Received from server doned")
 

@@ -1,5 +1,6 @@
 import socket
 from Objects import ClientObject
+from Utils.ShaTool import calculate_file_signature
 
 
 def transferFileToClient(fileName: str, clientSocket: socket):
@@ -11,7 +12,11 @@ def transferFileToClient(fileName: str, clientSocket: socket):
     """
     # 打开文件并读取内容
     with open(fileName, 'rb') as file:
-        file_data = file.read()
+        while True:
+            file_data = file.read()
+            if not file_data:
+                break
+            clientSocket.send(file_data)
 
     # 发送文件内容给客户端
     clientSocket.sendall(file_data)
@@ -41,10 +46,10 @@ class ParameterServer:
             # 等待客户端连接
             client_socket, client_address = self.serverSocket.accept()
             print(f"Accepted connection from {client_address}")
-            # 处理客户端请求
-            # data = client_socket.recv(1024)
-            # print(data)
-            transferFileToClient("test.txt", client_socket)
+            # 计算文件的哈希值
+            print(calculate_file_signature("input/model_ds_30.pth"))
+            print(calculate_file_signature("input/model_ds_30.pth"))
+            transferFileToClient("input/model_ds_30.pth", client_socket)
             # 关闭客户端连接
             client_socket.close()
             break
@@ -55,6 +60,8 @@ class ParameterServer:
         :return:
         """
         self.registeredClients.append(client)
+
+
 
 
 if __name__ == '__main__':
