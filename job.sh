@@ -1,0 +1,1 @@
+python JobSubmit.py --job_path=cifar_10.xml

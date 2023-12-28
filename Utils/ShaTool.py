@@ -1,5 +1,6 @@
 import hashlib
 
+
 def calculate_file_signature(file_path, hash_algorithm="sha256"):
     # 创建哈希对象
     hash_object = hashlib.new(hash_algorithm)

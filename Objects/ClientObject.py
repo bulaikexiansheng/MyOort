@@ -1,3 +1,6 @@
+from pprint import pformat
+
+
 class ClientObject:
     def __init__(self, ipAddress, port):
         self.port = port
@@ -9,3 +12,22 @@ class ClientObject:
     def getIpAddress(self):
         return self.ipAddress
 
+    def __hash__(self):
+        # 自定义哈希值的计算方式
+        return hash(self.ipAddress)
+
+    def __eq__(self, other):
+        if isinstance(other, ClientObject):
+            return self.ipAddress == other.ipAddress
+        return False
+
+    def __str__(self):
+        return pformat(self.__dict__)
+
+
+def clientConstruction(clientDataDict: dict):
+    return ClientObject(clientDataDict["src"]["ip"], clientDataDict["src"]["port"])
+
+
+if __name__ == '__main__':
+    print(ClientObject("1", 2))

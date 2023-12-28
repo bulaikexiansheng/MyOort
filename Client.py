@@ -1,37 +1,44 @@
 import os
 import socket
+from Connection.OOrtRequest import ConnectState
 from Utils.ShaTool import calculate_file_signature
+from Connection.OOrtRequest import createRequest, connectToSever, sendRequestToServer
 
-# 服务器的主机和端口
-host = '127.0.0.1'
-port = 6666
 
-# 创建客户端socket
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def recvDataFromServer(connectSocket: socket):
+    """
+    从服务器接受bytes数据
+    :param connectSocket:
+    :return:
+    """
+    dataBytes = b''
+    dataRecv = connectSocket.recv(1024)
+    while not dataRecv:
+        dataBytes = dataBytes + dataRecv
+        dataRecv = connectSocket.recv(1024)
+    return dataBytes
 
-# 连接到服务器
-client_socket.connect((host, port))
 
-# # 发送一些测试数据
-# message = "Hello, Server!"
-# client_socket.sendall(message.encode())
+def recvFileFromServer(connectSocket: socket, savePath):
+    """
+    从服务器接受文件
+    :param connectSocket:
+    :param savePath:
+    :return:
+    """
+    if os.path.exists(savePath):
+        os.remove(savePath)
+    with open(savePath, 'ab') as file:
+        file.write(recvDataFromServer(connectSocket))
 
-# 文件保存路径
-file_path = 'output/model_ds_30.pth'
-if os.path.exists(file_path):
-    os.remove(file_path)
-# 接收文件内容
-while True:
-    file_data = client_socket.recv(1024)
-    if not file_data:
-        break
-    with open(file_path, 'ab') as file:
-        file.write(file_data)
-# 计算文件的哈希值
-print(calculate_file_signature(file_path))
-print(calculate_file_signature(file_path))
 
-print(f"Received from server doned")
-
-# 关闭客户端socket
-client_socket.close()
+# 新用户注册
+xmlConfigFilePath = "client_register.xml"
+config = createRequest(xmlConfigFilePath, ConnectState.ASK_FOR_REGISTER)
+connectSocket = connectToSever(config.targetIp, config.targetPort)
+sendRequestToServer(config, connectSocket)
+# while True:
+#     # 收配置
+#     recvDataFromServer(connectSocket)
+#     # 收文件
+#     recvFileFromServer(connectSocket, "output/model.pth")
