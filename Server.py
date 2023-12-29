@@ -23,6 +23,7 @@ def sendFileToClient(fileName: str, clientSocket: socket):
     # clientSocket.close()
     with open(fileName, "rb") as file:
         clientSocket.sendfile(file)
+    clientSocket.send(ParameterServer.TRANSFER_END.encode("utf-8"))
 
 
 def sendStrContentToClient(dataContent: str, clientSocket: socket):
@@ -50,6 +51,7 @@ def recvDataFromSocket(src: socket, speed: int = 1024):
         if contentStr.endswith(ParameterServer.TRANSFER_END):
             contentStr = contentStr.replace(ParameterServer.TRANSFER_END, "")
             break
+        line = src.recv(speed)
     return contentStr
 
 
@@ -86,7 +88,8 @@ def dispatchModelToSingleClient(clientManager, client, modelName, paramPath):
     # TODO: 发送一些配置信息
     sendStrContentToClient(modelName, clientSocket)
     # TODO: 发送参数文件
-    # sendFileToClient(paramPath, clientSocket)
+    if paramPath:
+        sendFileToClient(paramPath, clientSocket)
 
 
 def dispatchModelToClients(clientManager, clients, modelName, param):
@@ -102,7 +105,7 @@ def dispatchModelToClients(clientManager, clients, modelName, param):
 
 
 class ParameterServer:
-    TRANSFER_END = "\x00\x00"
+    TRANSFER_END = "****"
     def __init__(self, host, port):
         """
         服务器初始化
@@ -237,10 +240,10 @@ class ClientManager:
         :return:
         """
         # TODO: do client select here
-        if workerNum > len(self.onlineClients):
-            return None
-        return self.onlineClients[:workerNum]
-
+        # if workerNum > len(self.onlineClients):
+        #     return None
+        # return self.onlineClients[:workerNum]
+        return self.onlineClients
     def getClientSocketByIpAddress(self, ip):
         return self.clientSocketMap.get(ip)
 
@@ -248,5 +251,5 @@ class ClientManager:
 
 
 if __name__ == '__main__':
-    ps = ParameterServer('172.30.87.227', 6666)
+    ps = ParameterServer(socket.gethostbyname(socket.gethostname()), 6666)
     ps.start()

@@ -16,23 +16,27 @@ def recvDataFromServer(connectSocket: socket):
     dataRecv = connectSocket.recv(1024)
     while dataRecv:
         dataBytes = dataBytes + dataRecv
-        if dataBytes.endswith(b"\x00\x00"):
-            # dataBytes = dataBytes.replace(b"\x00\x00", b"")
+        if dataBytes.endswith(b"****"):
+            dataBytes = dataBytes.replace(b"****", b"")
             # print(dataBytes)
             break
         dataRecv = connectSocket.recv(1024)
     return dataBytes
 
 
-def recvFileFromServer(connectSocket: socket, savePath):
+def recvFileFromServer(connectSocket: socket, savePath, saveName):
     """
     从服务器接受文件
     :param connectSocket:
     :param savePath:
     :return:
     """
-    if os.path.exists(savePath):
-        os.remove(savePath)
+    size = len(os.listdir(savePath))
+    saveName = saveName.replace("*", str(size))
+    savePath = os.path.join(savePath, saveName)
+    print(f"文件保存在{savePath}")
+    # if os.path.exists(savePath):
+    #     os.remove(savePath)
     with open(savePath, 'ab') as file:
         file.write(recvDataFromServer(connectSocket))
 
@@ -47,4 +51,4 @@ while True:
     dataBytes = recvDataFromServer(connectSocket)
     print(dataBytes.decode('utf-8'))
     # 收文件
-    # recvFileFromServer(connectSocket, "output/model.pth")
+    recvFileFromServer(connectSocket, "output", "model*.pth")

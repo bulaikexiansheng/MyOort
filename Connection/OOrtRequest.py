@@ -89,4 +89,4 @@ def connectToSever(targetIp, targetPort):
 
 
 def sendRequestToServer(request, client_socket):
-    client_socket.sendall(f"{request.body()}\x00\x00".encode("utf-8"))
+    client_socket.sendall(f"{request.body()}****".encode("utf-8"))
