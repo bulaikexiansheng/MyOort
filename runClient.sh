@@ -5,6 +5,7 @@ python Client.py &
 
 # 获取上一个命令的进程ID（PID）
 PYTHON_PID=$!
+echo "$PYTHON_PID"
 
 # 等待Python进程结束
 wait $PYTHON_PID

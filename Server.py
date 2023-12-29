@@ -32,6 +32,7 @@ def sendStrContentToClient(dataContent: str, clientSocket: socket):
     :param clientSocket: 服务器与客户端的socket
     :return: Succeed(True) or Failed(False)
     """
+    dataContent = "".join([dataContent, ParameterServer.TRANSFER_END])
     clientSocket.sendall(dataContent.encode("utf-8"))
 
 
@@ -43,11 +44,12 @@ def recvDataFromSocket(src: socket, speed: int = 1024):
     :return:
     """
     contentStr = ""
-    while True:
-        line = src.recv(speed)
-        if not line:
-            break
+    line = src.recv(speed)
+    while line:
         contentStr = "".join((contentStr, line.decode("utf-8")))
+        if contentStr.endswith(ParameterServer.TRANSFER_END):
+            contentStr = contentStr.replace(ParameterServer.TRANSFER_END, "")
+            break
     return contentStr
 
 
@@ -69,22 +71,25 @@ def connectToClient(ipAddress, port):
     return client_socket
 
 
-def dispatchModelToSingleClient(client, modelName, paramPath):
+def dispatchModelToSingleClient(clientManager, client, modelName, paramPath):
     """
     发送模型命令和模型参数到客户端
+    :param clientManager:
     :param client: 客户端
     :param modelName: 模型的名字
     :param paramPath: 参数路径
     :return:
     """
-    clientSocket = connectToClient(client.getIpAddress(), client.getPort())
+    # clientSocket = connectToClient(client.getIpAddress(), client.getPort())
+    clientSocket = clientManager.getClientSocketByIpAddress(client.getIpAddress())
+
     # TODO: 发送一些配置信息
     sendStrContentToClient(modelName, clientSocket)
     # TODO: 发送参数文件
-    sendFileToClient(paramPath, clientSocket)
+    # sendFileToClient(paramPath, clientSocket)
 
 
-def dispatchModelToClients(clients, modelName, param):
+def dispatchModelToClients(clientManager, clients, modelName, param):
     """
     从服务器分发模型到客户端
     :param clients: 选到的客户端
@@ -93,10 +98,11 @@ def dispatchModelToClients(clients, modelName, param):
     :return:
     """
     for client in clients:
-        dispatchModelToSingleClient(client, modelName, param)
+        dispatchModelToSingleClient(clientManager, client, modelName, param)
 
 
 class ParameterServer:
+    TRANSFER_END = "\x00\x00"
     def __init__(self, host, port):
         """
         服务器初始化
@@ -179,10 +185,10 @@ class ParameterServer:
         while endSignal(True):
             if not os.path.exists(modelPath):
                 print("模型暂不存在")
-                dispatchModelToClients(clients, modelName, None)
+                dispatchModelToClients(self.clientManager, clients, modelName, None)
             else:
                 print("模型已存在")
-                dispatchModelToClients(clients, modelName, modelPath)
+                dispatchModelToClients(self.clientManager, clients, modelName, modelPath)
             break
         print("\n==================================wait for clients train================================")
         print("\n==================================begin================================")
@@ -234,6 +240,11 @@ class ClientManager:
         if workerNum > len(self.onlineClients):
             return None
         return self.onlineClients[:workerNum]
+
+    def getClientSocketByIpAddress(self, ip):
+        return self.clientSocketMap.get(ip)
+
+
 
 
 if __name__ == '__main__':

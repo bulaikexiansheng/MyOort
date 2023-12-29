@@ -5,7 +5,7 @@
         <port>0</port>   <!--默认端口6666，可以修改,0表示端口随机-->
     </src>
     <target>
-        <ip>172.30.87.227</ip>
+        <ip>192.168.1.102</ip>
         <port>6666</port>
     </target>
     <request>

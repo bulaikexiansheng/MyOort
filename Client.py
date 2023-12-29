@@ -12,9 +12,14 @@ def recvDataFromServer(connectSocket: socket):
     :return:
     """
     dataBytes = b''
+    print("客户端开始监听服务器发来的信息...")
     dataRecv = connectSocket.recv(1024)
-    while not dataRecv:
+    while dataRecv:
         dataBytes = dataBytes + dataRecv
+        if dataBytes.endswith(b"\x00\x00"):
+            # dataBytes = dataBytes.replace(b"\x00\x00", b"")
+            # print(dataBytes)
+            break
         dataRecv = connectSocket.recv(1024)
     return dataBytes
 
@@ -37,8 +42,9 @@ xmlConfigFilePath = "client_register.xml"
 config = createRequest(xmlConfigFilePath, ConnectState.ASK_FOR_REGISTER)
 connectSocket = connectToSever(config.targetIp, config.targetPort)
 sendRequestToServer(config, connectSocket)
-# while True:
-#     # 收配置
-#     recvDataFromServer(connectSocket)
-#     # 收文件
-#     recvFileFromServer(connectSocket, "output/model.pth")
+while True:
+    # 收配置
+    dataBytes = recvDataFromServer(connectSocket)
+    print(dataBytes.decode('utf-8'))
+    # 收文件
+    # recvFileFromServer(connectSocket, "output/model.pth")
